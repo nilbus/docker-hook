@@ -1,12 +1,11 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Automatic Docker Deployment via Webhooks."""
-
 import json
 import os
 from subprocess import Popen
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+
 try:
     # For Python 3.0 and later
     from http.server import HTTPServer
@@ -45,7 +44,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         if args.token == self.path[1:]:
             logging.info("Start executing '%s'" % args.cmd)
             try:
-                Popen(args.cmd, env=env).wait()
+                Popen(args.cmd, env=env, shell=True).wait()
                 self.send_response(200, "OK")
                 if 'callback_url' in json_params:
                     # Make a callback to Docker Hub
@@ -86,7 +85,6 @@ def get_parser():
     parser.add_argument("-c", "--cmd",
                         dest="cmd",
                         required=True,
-                        nargs="*",
                         help="Command to execute when triggered")
     parser.add_argument("--addr",
                         dest="addr",
@@ -105,6 +103,7 @@ def main(addr, port):
     """Start a HTTPServer which waits for requests."""
     httpd = HTTPServer((addr, port), RequestHandler)
     httpd.serve_forever()
+
 
 if __name__ == '__main__':
     parser = get_parser()
